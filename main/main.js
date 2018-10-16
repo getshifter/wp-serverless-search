@@ -38,8 +38,8 @@ jQuery(window).ready(function ($) {
 
       var fuse = new Fuse(searchData, options);
 
-      $('body.search #main').empty();
-      $('body.search #main').append('<div id="search-results"></div>');
+      // $('#main').empty();
+      $('#main').append('<div id="search-results"></div>');
 
       $searchbar.on('input', function () {
         var search = fuse.search($searchbar.val());
