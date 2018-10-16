@@ -1,300 +1,87 @@
-jQuery(window).ready(function( $ ) {
-  // Mixins
-  var Mixins = {}
-  Mixins.Event = function (base) {
-    return {
-      _hook: function () {
-        if (!this._$hook) {
-          this._$hook = $({})
-        }
-        return this._$hook
-      },
-      on: function () {
-        var hook = this._hook()
-        hook.on.apply(hook, arguments)
-      },
-      off: function () {
-        var hook = this._hook()
-        hook.off.apply(hook, arguments)
-      },
-      trigger: function () {
-        var hook = this._hook()
-        hook.trigger.apply(hook, arguments)
-      }
-    }
+jQuery(window).ready(function ($) {
+
+  function appendPageTitle() {
+    $("body.search .search-field").keyup(function () {
+      $("body.search .page-title span").empty().append($(this).val());;
+    });
   }
 
-  // Core
-  var App = {}
+  appendPageTitle();
 
-  App.Options = Fiber.extend(function () {
-    return {
-      init: function () {
-        this.setupNodes()
-        this.bindEvents()
-        this.data = {
-          include: []
+  function getSearchQuery() {
+    var urlParams = new URLSearchParams(window.location.search);
+    var searchQuery = urlParams.getAll('s');
+    return searchQuery;
+  }
+
+  var search = null;
+
+  var data = location.origin + '/wp-content/uploads/wp-sls-api/db.json';
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', data, true);
+
+  xhr.onload = function () {
+    if (xhr.status === 200) {
+
+      var array = JSON.parse(this.responseText);
+      var searchData = array.posts;
+
+      var $searchbar = $('.search-field');
+      var options = {
+        shouldSort: true,
+        threshold: 0.5,
+        minMatchCharLength: 0,
+        keys: [
+          "title.rendered",
+        ],
+      };
+
+      var fuse = new Fuse(searchData, options);
+
+      $('body.search #main').empty();
+      $('body.search #main').append('<div id="search-results"></div>');
+
+      $searchbar.on('input', function () {
+        var search = fuse.search($searchbar.val());
+        var $res = $('#search-results');
+        $res.empty();
+        if ($searchbar.val().length < 1) return;
+        if (search[0] === undefined) {
+          $res.append('<h4>No results</h4>');
         }
 
-        _.each(this.checkboxItems, _.bind(function (item) {
-          this.setupCheckboxItems(item, false)
-        }, this))
+        $res.append('<h5>All results:</h5>');
 
-        _.each(this.rangeItems, _.bind(function (item) {
-          this.setupRangeItems(item, false)
-        }, this))
+        var articleData = {
+          title: '',
+          excerpt: '',
+          link: ''
+        };
 
-        this.setupKeys(true)
-
-        this.setupIdentifier(false)
-
-        this.setupPatternLength(false)
-      },
-      setupNodes: function () {
-        this.$caseSensitiveCheckbox = $('#caseSensitiveCheckbox')
-        this.$scoreCheckbox = $('#scoreCheckbox')
-        this.$matchesCheckbox = $('#matchesCheckbox')
-        this.$sortCheckbox = $('#sortCheckbox')
-        this.$tokenizeCheckbox = $('#tokenizeCheckbox')
-        this.$matchAllTokensCheckbox = $('#matchAllTokensCheckbox')
-        this.$identifierTextbox = $('#identifierTextbox')
-
-        this.$locationRange = $('#locationRange')
-        this.$thresholdRange = $('#thresholdRange')
-        this.$distanceRange = $('#distanceRange')
-        this.$maxPatternLength = $('#maxPatternLength')
-        this.$keysTextbox = $('#keysTextbox')
-
-        this.checkboxItems = [{
-          node: this.$caseSensitiveCheckbox,
-          name: 'caseSensitive'
-        }, {
-          node: this.$sortCheckbox,
-          name: 'shouldSort'
-        }, {
-          node: this.$tokenizeCheckbox,
-          name: 'tokenize'
-        }, {
-          node: this.$matchAllTokensCheckbox,
-          name: 'matchAllTokens'
-        }]
-
-        this.includeItems = [{
-          node: this.$scoreCheckbox,
-          name: 'score'
-        }, {
-          node: this.$matchesCheckbox,
-          name: 'matches'
-        }]
-
-        this.rangeItems = [{
-          node: this.$thresholdRange,
-          name: 'threshold'
-        }, {
-          node: this.$locationRange,
-          name: 'location'
-        }, {
-          node: this.$distanceRange,
-          name: 'distance'
-        }]
-      },
-      bindEvents: function () {
-        // Checkboxes
-        _.each(this.checkboxItems, _.bind(function (item) {
-          item.node.on('change', _.bind(function () {
-            this.setupCheckboxItems(item, true)
-          }, this))
-        }, this))
-
-        // Checkboxes
-        _.each(this.includeItems, _.bind(function (item) {
-          item.node.on('change', _.bind(function () {
-            this.setupIncludetems(item, true)
-          }, this))
-        }, this))
-
-        // Ranges
-        _.each(this.rangeItems, _.bind(function (item) {
-          item.node.on('change', _.bind(function () {
-            this.setupRangeItems(item, true)
-          }, this))
-        }, this))
-
-        this.$identifierTextbox.on('change', _.bind(this.setupIdentifier, this))
-
-        // keys
-        this.$keysTextbox.on('change', _.bind(this.setupKeys, this))
-
-        // Pattern length
-        this.$maxPatternLength.on('change', _.bind(this.setupPatternLength, this))
-
-        // Google events
-        this.$caseSensitiveCheckbox.on('change', function () {
-          ga('send', 'event', 'Demo', 'change', 'option:case-sensitive')
-        })
-        this.$scoreCheckbox.on('change', function () {
-          ga('send', 'event', 'Demo', 'change', 'option:score')
-        })
-        this.$matchesCheckbox.on('change', function () {
-          ga('send', 'event', 'Demo', 'change', 'option:matches')
-        })
-        this.$sortCheckbox.on('change', function () {
-          ga('send', 'event', 'Demo', 'change', 'option:sort')
-        })
-        this.$tokenizeCheckbox.on('change', function () {
-          ga('send', 'event', 'Demo', 'change', 'option:tokenize')
-        })
-        this.$matchAllTokensCheckbox.on('change', function () {
-          ga('send', 'event', 'Demo', 'change', 'option:match-all-tokens')
-        })
-        this.$identifierTextbox.on('change', function () {
-          ga('send', 'event', 'Demo', 'change', 'option:identifier')
-        })
-        this.$keysTextbox.on('change', function () {
-          ga('send', 'event', 'Demo', 'change', 'option:keys')
-        })
-      },
-      setupCheckboxItems: function (item, trigger) {
-        var checked = item.node.prop('checked')
-        this.data[item.name] = checked
-        if (trigger || trigger === undefined) {
-          this.trigger('change')
+        function article(articleData) {
+          return `<article>
+              <header class='entry-header'>
+                <h2 class='entry-title'><a href='` + articleData.link + `' rel='bookmark'>` + articleData.title + `</a></h2>
+              </header>
+              <div class='entry-summary'>
+                ` + articleData.excerpt + `
+              </div>
+            </article>`;
         }
-      },
-      setupIncludetems: function (item, trigger) {
-        var checked = item.node.prop('checked')
-        var index = this.data.include.indexOf(item.name)
-        if (checked) {
-          if (index == -1) {
-            this.data.include.push(item.name)
-          }
-        } else {
-          if (index !== -1) {
-            this.data.include.splice(index, 1)
-          }
-        }
-        if (trigger || trigger === undefined) {
-          this.trigger('change')
-        }
-      },
-      setupRangeItems: function (item, trigger) {
-        var value = item.node.val()
-        this.data[item.name] = parseFloat(value)
-        if (trigger || trigger === undefined) {
-          this.trigger('change')
-        }
-      },
-      setupIdentifier: function (trigger) {
-        this.data.id = this.$identifierTextbox.val()
-        if (trigger) {
-          this.trigger('change')
-        }
-      },
-      setupKeys: function (trigger) {
-        var text = this.$keysTextbox.val();
-        this.data.keys = ['formName', 'formTitle', 'businessType'];
-        if (trigger) {
-          this.trigger('change')
-        }
-      },
-      setupPatternLength: function (trigger) {
-        var value = this.$maxPatternLength.val()
-        this.data['maxPatternLength'] = parseInt(value)
-        if (trigger || trigger === undefined) {
-          this.trigger('change')
-        }
-      }
+
+        search.forEach(function (el) {
+          var articleData = {
+            title: el.title.rendered,
+            excerpt: el.excerpt.rendered,
+            link: el.link.link
+          };
+          $res.append(article(articleData));
+        });
+      });
+    } else {
+      console.log('Request failed.  Returned status of ' + xhr.status);
     }
-  })
-  Fiber.mixin(App.Options, Mixins.Event)
+  };
 
-  App.Main = new (Fiber.extend(function () {
-    return {
-      init: function () {
-        this.setupNodes()
-        this.bindEvents()
-        this.setupItems()
-      },
-      setupNodes: function () {
-        this.$itemsTextArea = $('#itemsTextArea')
-        this.$searchTextbox = $('#searchTextbox')
-        this.$resultTextArea = $('#resultTextArea')
-        this.$jsTextArea = $('#jsTextArea')
-        this.$searchTimeLabel = $('#searchTimeLabel')
-      },
-      bindEvents: function () {
-        this.options = new App.Options()
-        this.options.on('change', _.bind(this.setupFuse, this))
-        this.$itemsTextArea.on('change', _.bind(this.setupItems, this))
-
-        this.$searchTextbox.on('keyup', _.debounce(_.bind(function () {
-          this.search(this.$searchTextbox.val())
-        }, this), 0))
-
-        this.$itemsTextArea.on('change', function () {
-          ga('send', 'event', 'Demo', 'change', 'items')
-        })
-        this.$searchTextbox.on('change', function () {
-          ga('send', 'event', 'Demo', 'change', 'search')
-        })
-      },
-      setupItems: function () {
-        var list = this.$itemsTextArea.val()
-        this.list = eval(list)
-        this.setupFuse()
-      },
-      setupFuse: function () {
-        this.fuse = new Fuse(this.list, this.options.data)
-        this.search(this.$searchTextbox.val())
-      },
-      search: function (pattern) {
-        if (pattern.length > this.options.data.maxPatternLength) {
-          this.$resultTextArea.html('Pattern length is too long')
-          return
-        }
-        this.pattern = pattern
-        var start = new Date().getTime()
-        var result = this.fuse.search(pattern)
-        var end = new Date().getTime()
-        this.$searchTimeLabel.text((end - start) + ' ms')
-        this.$resultTextArea.html(JSON.stringify(result, null, '  '))
-        this.updateJS()
-      },
-      updateJS: function () {
-        var arr = []
-        arr.push('var options = {')
-        if (this.options.data.id) {
-          arr.push('  id: "' + this.options.data.id + '",')
-        }
-        if (this.options.data.caseSensitive) {
-          arr.push('  caseSensitive: ' + this.options.data.caseSensitive + ',')
-        }
-        if (this.options.data.include.length) {
-          var items = _.map(this.options.data.include, function (item) {
-            return '"' + item + '"'
-          }).join(',')
-          arr.push('  include: [' + items + '],')
-        }
-        if (this.options.data.shouldSort) {
-          arr.push('  shouldSort: ' + this.options.data.shouldSort + ',')
-        }
-        if (this.options.data.tokenize) {
-          arr.push('  tokenize: ' + this.options.data.tokenize + ',')
-        }
-        if (this.options.data.matchAllTokens) {
-          arr.push('  matchAllTokens: ' + this.options.data.matchAllTokens + ',')
-        }
-        arr.push('  threshold: ' + this.options.data.threshold + ',')
-        arr.push('  location: ' + this.options.data.location + ',')
-        arr.push('  distance: ' + this.options.data.distance + ',')
-        arr.push('  maxPatternLength: ' + this.options.data.maxPatternLength + ',')
-        arr.push('  keys: ' + JSON.stringify(this.options.data.keys, null, '    '))
-        arr.push('};')
-        arr.push('var fuse = new Fuse(list, options); // "list" is the item array')
-        arr.push('var result = fuse.search("' + this.pattern + '");')
-        arr = arr.join('\n')
-        this.$jsTextArea.html(arr)
-      }
-    }
-  }))()
+  xhr.send();
 })

@@ -33,4 +33,4 @@ function wp_sls_search_js() {
   wp_enqueue_script('lodash');
   wp_enqueue_script('fusejs');
 
-}
+} 
