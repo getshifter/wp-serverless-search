@@ -22,15 +22,13 @@ function wp_sls_search_js() {
   wp_register_script( 'fusejs', 'https://cdnjs.cloudflare.com/ajax/libs/fuse.js/3.2.1/fuse.min.js', null, null, false );
   wp_localize_script('fusejs', 'ajax_object', array( 'ajax_url' => admin_url( 'admin-ajax.php' ) ) );
 
-  wp_register_script( 'fiber', 'https://cdnjs.cloudflare.com/ajax/libs/fiber/1.0.5/fiber.min.js', null, null, false );
-  wp_localize_script('fiber', 'ajax_object', array( 'ajax_url' => admin_url( 'admin-ajax.php' ) ) );
-
-  wp_register_script( 'lodash', 'https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.14.1/lodash.min.js', null, null, false );
-  wp_localize_script('lodash', 'ajax_object', array( 'ajax_url' => admin_url( 'admin-ajax.php' ) ) );
+  wp_register_script( 'micromodal', 'https://unpkg.com/micromodal@0.3.2/dist/micromodal.min.js', null, null, true );
+  wp_localize_script('micromodal', 'ajax_object', array( 'ajax_url' => admin_url( 'admin-ajax.php' ) ) );
 
   wp_enqueue_script('wp-sls-search-js');
-  wp_enqueue_script('fiber');
-  wp_enqueue_script('lodash');
+  wp_enqueue_script('micromodal');
+  // wp_enqueue_script('fiber');
+  // wp_enqueue_script('lodash');
   wp_enqueue_script('fusejs');
 
 } 

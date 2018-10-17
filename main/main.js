@@ -1,30 +1,36 @@
 jQuery(window).ready(function ($) {
-
-  function appendPageTitle() {
-    $("body.search .search-field").keyup(function () {
-      $("body.search .page-title span").empty().append($(this).val());;
-    });
-  }
-
-  appendPageTitle();
-
-  function getSearchQuery() {
-    var urlParams = new URLSearchParams(window.location.search);
-    var searchQuery = urlParams.getAll('s');
-    return searchQuery;
-  }
-
+  var feed = "https://127.0.0.1:8443/feed/";
   var search = null;
+  $.ajax(feed, {
+    accepts: {
+      xml: "application/rss+xml"
+    },
+    dataType: "xml",
+    success: function (data) {
 
-  var data = location.origin + '/wp-content/uploads/wp-sls-api/db.json';
-  var xhr = new XMLHttpRequest();
-  xhr.open('GET', data, true);
+      var searchArray = [];
 
-  xhr.onload = function () {
-    if (xhr.status === 200) {
+      var data = data.getElementsByTagName("channel")[0];
 
-      var array = JSON.parse(this.responseText);
-      var searchData = array.posts;
+      $(data).find("item").each(function () {
+        var el = $(this);
+
+        // Check for Title
+        if (!el.find("title").text()) {
+          return;
+        }
+
+        // console.log(el);
+
+        searchArray.push({
+          "title": el.find('title').text(),
+          "description": el.find('description').text(),
+          "link": el.find('link').text()
+        });
+
+      });
+
+      // console.log(searchArray);
 
       var $searchbar = $('.search-field');
       var options = {
@@ -32,13 +38,13 @@ jQuery(window).ready(function ($) {
         threshold: 0.5,
         minMatchCharLength: 0,
         keys: [
-          "title.rendered",
+          "title",
         ],
       };
 
-      var fuse = new Fuse(searchData, options);
+      var fuse = new Fuse(searchArray, options);
 
-      // $('#main').empty();
+      $('#main').empty();
       $('#main').append('<div id="search-results"></div>');
 
       $searchbar.on('input', function () {
@@ -52,13 +58,13 @@ jQuery(window).ready(function ($) {
 
         $res.append('<h5>All results:</h5>');
 
-        var articleData = {
-          title: '',
-          excerpt: '',
-          link: ''
-        };
-
-        function article(articleData) {
+        function article(
+          articleData = {
+            title: '',
+            excerpt: '',
+            link: ''
+          }
+        ) {
           return `<article>
               <header class='entry-header'>
                 <h2 class='entry-title'><a href='` + articleData.link + `' rel='bookmark'>` + articleData.title + `</a></h2>
@@ -69,19 +75,20 @@ jQuery(window).ready(function ($) {
             </article>`;
         }
 
-        search.forEach(function (el) {
+        search.forEach(function (data) {
+
           var articleData = {
-            title: el.title.rendered,
-            excerpt: el.excerpt.rendered,
-            link: el.link.link
+            title: data.title,
+            excerpt: data.description,
+            link: data.link
           };
+
           $res.append(article(articleData));
         });
       });
-    } else {
-      console.log('Request failed.  Returned status of ' + xhr.status);
     }
-  };
+  });
 
-  xhr.send();
-})
+  MicroModal.init()
+
+});
