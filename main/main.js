@@ -1,5 +1,5 @@
 jQuery(window).ready(function ($) {
-  var feed = "https://127.0.0.1:8443/feed/";
+  var feed = location.origin + '/feed/';
   var search = null;
   $.ajax(feed, {
     accepts: {
