@@ -1,0 +1,47 @@
+/**************************\
+  Required Styles
+\**************************/
+
+[aria-hidden="true"] {
+  display: none;
+}
+
+
+/**************************\
+  Basic Modal Styles
+\**************************/
+
+.wp-sls-search-modal__overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.wp-sls-search-modal__container {
+  background-color: #fff;
+  padding: 30px 50px;
+  width: 90vw;
+  height: 90vh;
+}
+
+.wp-sls-search-modal__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.wp-sls-search-modal__results {
+  padding: 30px 0;
+}
+
+.wp-sls-search-modal__header a:before {
+  content: "\2715";
+}
+

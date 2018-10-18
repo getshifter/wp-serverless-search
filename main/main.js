@@ -32,7 +32,7 @@ jQuery(window).ready(function ($) {
 
       // console.log(searchArray);
 
-      var $searchbar = $('.search-field');
+      var $searchbar = $('.wp-sls-search-modal .search-field');
       var options = {
         shouldSort: true,
         threshold: 0.5,
@@ -44,8 +44,12 @@ jQuery(window).ready(function ($) {
 
       var fuse = new Fuse(searchArray, options);
 
-      $('#main').empty();
-      $('#main').append('<div id="search-results"></div>');
+      // $('#main').empty();
+      $('.wp-sls-search-modal [role=document]').append('<div id="search-results" class="wp-sls-search-modal__results"></div>');
+
+      $('.search-field').on('click', function () {
+        MicroModal.show('wp-sls-search-modal');
+      })
 
       $searchbar.on('input', function () {
         var search = fuse.search($searchbar.val());
@@ -89,6 +93,9 @@ jQuery(window).ready(function ($) {
     }
   });
 
-  MicroModal.init()
+  MicroModal.init({
+    onClose: modal => console.info(`${modal.id} is hidden`),
+    onShow: modal => console.info(`${modal.id} is shown`)
+  });
 
 });
