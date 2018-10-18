@@ -35,32 +35,38 @@ jQuery(window).ready(function ($) {
       var $searchbar = $('.wp-sls-search-modal .search-field');
       var options = {
         shouldSort: true,
-        threshold: 0.5,
-        minMatchCharLength: 0,
-        keys: [
-          "title",
-        ],
+        threshold: 0.6,
+        location: 0,
+        distance: 100,
+        maxPatternLength: 32,
+        minMatchCharLength: 1,
+        keys: [{
+          name: 'title',
+          weight: 0.75
+        }, {
+          name: 'description',
+          weight: 0.5
+        }]
       };
 
       var fuse = new Fuse(searchArray, options);
 
-      // $('#main').empty();
-      $('.wp-sls-search-modal [role=document]').append('<div id="search-results" class="wp-sls-search-modal__results"></div>');
+      $('.wp-sls-search-modal [role=document]').append('<div id="wp-sls-search-results" class="wp-sls-search-modal__results"></div>');
 
-      $('.search-field').on('click', function () {
+      $(searchParams.searchTarget).on('click', function () {
         MicroModal.show('wp-sls-search-modal');
       })
 
       $searchbar.on('input', function () {
         var search = fuse.search($searchbar.val());
-        var $res = $('#search-results');
+        var $res = $('#wp-sls-search-results');
         $res.empty();
         if ($searchbar.val().length < 1) return;
         if (search[0] === undefined) {
           $res.append('<h4>No results</h4>');
+        } else {
+          $res.append('<h5>All results:</h5>');
         }
-
-        $res.append('<h5>All results:</h5>');
 
         function article(
           articleData = {

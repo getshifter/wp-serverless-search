@@ -29,6 +29,7 @@
   padding: 30px 50px;
   width: 90vw;
   height: 90vh;
+  overflow: scroll;
 }
 
 .wp-sls-search-modal__header {
