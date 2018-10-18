@@ -11,7 +11,7 @@ Description: Serverless WordPress Search
  */
 function wp_sls_search_default_options() {
     $options = array(
-        'wp_sls_search_target_class' => 'blank',
+        'wp_sls_search_target_class' => '.search-field',
     );
 
     foreach ( $options as $key => $value ) {
