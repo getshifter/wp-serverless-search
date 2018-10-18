@@ -19,7 +19,9 @@ function wp_sls_search_default_options() {
     }
 }
 
-register_activation_hook(__FILE__, 'wp_sls_search_default_options');
+if (!get_option('wp_sls_search_target_class')) {
+  register_activation_hook(__FILE__, 'wp_sls_search_default_options');
+}
 
 /**
  * Admin Settings Menu
