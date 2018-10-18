@@ -33,6 +33,8 @@ jQuery(window).ready(function ($) {
       // console.log(searchArray);
 
       var $searchbar = $('.wp-sls-search-modal .search-field');
+      $('.wp-sls-search-modal form').submit(false);
+
       var options = {
         shouldSort: true,
         threshold: 0.6,
