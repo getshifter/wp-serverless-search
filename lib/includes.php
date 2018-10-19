@@ -26,14 +26,16 @@ function wp_sls_search_options() { ?>
           <?php do_settings_sections( 'wp-sls-search-settings-group' ); ?>
           <table class="form-table">
             <tr valign="top">
-              <th scope="row">Class:</th>
+              <th scope="row">Form Class:</th>
               <td>
+                <p>Target class to trigger search modal on submit.</p>
                 <input placeholder="[role=search]" name="wp_sls_search_form" type="text" aria-describedby="serverless-search-target-class" value="<?php echo get_option( 'wp_sls_search_form' ); ?>" class="regular-text code">
               </td>
             </tr>
             <tr valign="top">
-              <th scope="row">Class:</th>
+              <th scope="row">Input Class:</th>
               <td>
+                <p>Search input field to display results while typing.</p>
                 <input placeholder="input[type=search]" name="wp_sls_search_form_input" type="text" aria-describedby="serverless-search-target-class" value="<?php echo get_option( 'wp_sls_search_form_input' ); ?>" class="regular-text code">
               </td>
             </tr>

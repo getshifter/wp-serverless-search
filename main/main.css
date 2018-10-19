@@ -27,8 +27,8 @@
 .wp-sls-search-modal__container {
   background-color: #fff;
   padding: 30px 50px;
-  width: 90vw;
-  height: 90vh;
+  width: 80vw;
+  height: 80vh;
   overflow: scroll;
 }
 
@@ -37,6 +37,7 @@
   justify-content: space-between;
   align-items: flex-end;
   flex-direction: column;
+  margin-bottom: 30px;
 }
 
 .wp-sls-search-modal__results {
@@ -49,9 +50,5 @@
 
 input.wp-sls-search-field {
   width: 100%;
-  border: 0;
-  outline: 0;
-  background: transparent;
-  border-bottom: 1px solid #ccc;
 }
 

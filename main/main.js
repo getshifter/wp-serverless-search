@@ -2,18 +2,25 @@ jQuery(window).ready(function ($) {
   'use strict';
 
   var searchForm = $(searchParams.searchForm);
+  var urlParams = new URLSearchParams(window.location.search);
 
   searchForm.each(function () {
     $(this).submit(false);
-    $(this).submit(searchSubmit);
+    $(this).submit(launchSearch);
   });
 
-  function searchSubmit() {
+  // Launch modal based on URL search query
+  if (urlParams.get('s') != null) {
+    launchSearch();
+    $('.wp-sls-search-field').val(urlParams.get('s'));
+  }
+
+  function launchSearch() {
     MicroModal.show('wp-sls-search-modal');
   }
 
-  $(".search-field").keyup(function () {
-    $(".wp-sls-search-field").val($(this).val());
+  $(searchParams.searchFormInput).keyup(function () {
+    $('.wp-sls-search-field').val($(this).val());
   });
 
 });
@@ -89,23 +96,6 @@ jQuery(window).ready(function ($) {
             $res.append('<h5>All results:</h5>');
           }
 
-          function article(
-            articleData = {
-              title: '',
-              excerpt: '',
-              link: ''
-            }
-          ) {
-            return `<article>
-                <header class='entry-header'>
-                  <h2 class='entry-title'><a href='` + articleData.link + `' rel='bookmark'>` + articleData.title + `</a></h2>
-                </header>
-                <div class='entry-summary'>
-                  ` + articleData.excerpt + `
-                </div>
-              </article>`;
-          }
-
           search.forEach(function (data) {
 
             var articleData = {
@@ -122,3 +112,20 @@ jQuery(window).ready(function ($) {
   });
 
 });
+
+function article(
+  articleData = {
+    title: '',
+    excerpt: '',
+    link: ''
+  }
+) {
+  return `<article>
+      <header class='entry-header'>
+        <h2 class='entry-title'><a href='` + articleData.link + `' rel='bookmark'>` + articleData.title + `</a></h2>
+      </header>
+      <div class='entry-summary'>
+        ` + articleData.excerpt + `
+      </div>
+    </article>`;
+}
