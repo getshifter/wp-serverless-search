@@ -91,9 +91,9 @@ jQuery(window).ready(function ($) {
 
           if ($(this).val().length < 1) return;
           if (search[0] === undefined) {
-            $res.append('<h4>No results</h4>');
+            $res.append('<h5>No results</h5>');
           } else {
-            $res.append('<h5>All results:</h5>');
+            $res.append('<h5>' + search.length + ' results:</h5>');
           }
 
           search.forEach(function (data) {
