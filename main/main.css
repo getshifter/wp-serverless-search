@@ -35,7 +35,8 @@
 .wp-sls-search-modal__header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: flex-end;
+  flex-direction: column;
 }
 
 .wp-sls-search-modal__results {
@@ -44,5 +45,13 @@
 
 .wp-sls-search-modal__header a:before {
   content: "\2715";
+}
+
+input.wp-sls-search-field {
+  width: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  border-bottom: 1px solid #ccc;
 }
 

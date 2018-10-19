@@ -1,5 +1,25 @@
 jQuery(window).ready(function ($) {
-  var feed = location.origin + '/feed/';
+  'use strict';
+
+  var searchForm = $(searchParams.searchForm);
+
+  searchForm.each(function () {
+    $(this).submit(false);
+    $(this).submit(searchSubmit);
+  });
+
+  function searchSubmit() {
+    MicroModal.show('wp-sls-search-modal');
+  }
+
+  $(".search-field").keyup(function () {
+    $(".wp-sls-search-field").val($(this).val());
+  });
+
+});
+
+jQuery(window).ready(function ($) {
+  var feed = location.origin + '/wp-content/uploads/wp-sls/search-feed.xml';
   var search = null;
   $.ajax(feed, {
     accepts: {
@@ -11,6 +31,8 @@ jQuery(window).ready(function ($) {
       var searchArray = [];
 
       var data = data.getElementsByTagName("channel")[0];
+
+      $('.wp-sls-search-modal [role=document]').append('<div id="wp-sls-search-results" class="wp-sls-search-modal__results"></div>');
 
       $(data).find("item").each(function () {
         var el = $(this);
@@ -32,9 +54,6 @@ jQuery(window).ready(function ($) {
 
       // console.log(searchArray);
 
-      var $searchbar = $('.wp-sls-search-modal .search-field');
-      $('.wp-sls-search-modal form').submit(false);
-
       var options = {
         shouldSort: true,
         threshold: 0.6,
@@ -53,57 +72,53 @@ jQuery(window).ready(function ($) {
 
       var fuse = new Fuse(searchArray, options);
 
-      $('.wp-sls-search-modal [role=document]').append('<div id="wp-sls-search-results" class="wp-sls-search-modal__results"></div>');
+      var $searchInput = $(searchParams.searchFormInput);
 
-      $(searchParams.searchTarget).on('click', function () {
-        MicroModal.show('wp-sls-search-modal');
-      })
+      $searchInput.each(function () {
 
-      $searchbar.on('input', function () {
-        var search = fuse.search($searchbar.val());
-        var $res = $('#wp-sls-search-results');
-        $res.empty();
-        if ($searchbar.val().length < 1) return;
-        if (search[0] === undefined) {
-          $res.append('<h4>No results</h4>');
-        } else {
-          $res.append('<h5>All results:</h5>');
-        }
+        $(this).on('input', function () {
 
-        function article(
-          articleData = {
-            title: '',
-            excerpt: '',
-            link: ''
+          var search = fuse.search($(this).val());
+          var $res = $('#wp-sls-search-results');
+          $res.empty();
+
+          if ($(this).val().length < 1) return;
+          if (search[0] === undefined) {
+            $res.append('<h4>No results</h4>');
+          } else {
+            $res.append('<h5>All results:</h5>');
           }
-        ) {
-          return `<article>
-              <header class='entry-header'>
-                <h2 class='entry-title'><a href='` + articleData.link + `' rel='bookmark'>` + articleData.title + `</a></h2>
-              </header>
-              <div class='entry-summary'>
-                ` + articleData.excerpt + `
-              </div>
-            </article>`;
-        }
 
-        search.forEach(function (data) {
+          function article(
+            articleData = {
+              title: '',
+              excerpt: '',
+              link: ''
+            }
+          ) {
+            return `<article>
+                <header class='entry-header'>
+                  <h2 class='entry-title'><a href='` + articleData.link + `' rel='bookmark'>` + articleData.title + `</a></h2>
+                </header>
+                <div class='entry-summary'>
+                  ` + articleData.excerpt + `
+                </div>
+              </article>`;
+          }
 
-          var articleData = {
-            title: data.title,
-            excerpt: data.description,
-            link: data.link
-          };
+          search.forEach(function (data) {
 
-          $res.append(article(articleData));
+            var articleData = {
+              title: data.title,
+              excerpt: data.description,
+              link: data.link
+            };
+
+            $res.append(article(articleData));
+          });
         });
       });
     }
-  });
-
-  MicroModal.init({
-    onClose: modal => console.info(`${modal.id} is hidden`),
-    onShow: modal => console.info(`${modal.id} is shown`)
   });
 
 });
