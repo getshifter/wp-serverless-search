@@ -7,6 +7,19 @@ Description: Serverless WordPress Search
 */
 
 /**
+ * On Plugin Activation
+ */
+
+function wp_sls_search_install() {
+  // trigger our function that registers the custom post type
+  create_wp_sls_dir();
+  create_search_feed();
+}
+
+add_action( 'init', 'create_wp_sls_dir' );
+register_activation_hook( __FILE__, 'wp_sls_search_install' );
+
+/**
  * Create WP SLS Dir
  */
 
@@ -21,29 +34,25 @@ function create_wp_sls_dir() {
   }
 }
 
-// Todo: Only run on activation and post save
-create_wp_sls_dir();
-
 /**
  * Create Search Feed
  */
 
 function create_search_feed() {
 
-    require_once( ABSPATH . 'wp-admin/includes/export.php' );
-    
-    ob_start();
-    export_wp();
-    $xml = ob_get_clean();
+  require_once( ABSPATH . 'wp-admin/includes/export.php' );
+  
+  ob_start();
+  export_wp();
+  $xml = ob_get_clean();
 
-    $upload_dir = wp_get_upload_dir();
-    $save_path = $upload_dir['basedir'] . '/wp-sls/search-feed.xml';
-    
-    file_put_contents($save_path, $xml);
- }
+  $upload_dir = wp_get_upload_dir();
+  $save_path = $upload_dir['basedir'] . '/wp-sls/search-feed.xml';
+  
+  file_put_contents($save_path, $xml);
+}
 
- // Todo: Only run on activation and post save
- add_action( 'save_post', 'create_search_feed' );
+add_action( 'save_post', 'create_search_feed' );
 
 /**
  * Set Plugin Defaults
