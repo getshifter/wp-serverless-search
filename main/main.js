@@ -1,8 +1,100 @@
+const urlParams = window.location.search;
+const searchModalSelector = 'wp-sls-search-modal';
+const searchForm = searchParams.searchForm;
+const searchModalInput = 'input.wp-sls-search-field';
+
+/**
+ * 
+ * Launch Search Modal
+ */
+function launchSearchModal() {
+  document.addEventListener("DOMContentLoaded", function (event) {
+    MicroModal.show('wp-sls-search-modal');
+  });
+}
+
+/**
+ * 
+ * @param {string} url - WordPress Post URL Pathname
+ */
 function postUrl(url) {
   var parser = document.createElement('a');
   parser.href = url;
   return parser.pathname;
 }
+
+/**
+ * 
+ * Test for search query based on URL
+ */
+function urlQuery() {
+  if (!searchQueryParams()) {
+    return;
+  } else {
+    launchSearchModal();
+  }
+}
+
+urlQuery();
+
+/**
+ * 
+ * @param {string} query - Add query to search modal
+ */
+function addQueryToSearchModal() {
+  var el = document.querySelectorAll(searchModalInput);
+  [].forEach.call(el, function (el) {
+    el.value = searchQueryParams();
+  });
+}
+
+addQueryToSearchModal();
+
+/**
+ * 
+ * @param {string} url - Parse search query paramaters from URL
+ */
+function searchQueryParams(url = urlParams) {
+  url = url.split('+').join(' ');
+
+  var params = {},
+    tokens,
+    re = /[?&]?([^=]+)=([^&]*)/g;
+
+  while (tokens = re.exec(url)) {
+    params[decodeURIComponent(tokens[1])] = decodeURIComponent(tokens[2]);
+  }
+
+  return params.s;
+}
+
+/**
+ * 
+ * Search submit
+ */
+
+function onSearchSubmit() {
+  var el = document.querySelectorAll(searchForm);
+  [].forEach.call(el, function (e) {
+    e.addEventListener("submit", function (e) {
+      e.preventDefault();
+      MicroModal.show('wp-sls-search-modal');
+    });
+  });
+}
+
+onSearchSubmit();
+
+function onSearchInput() {
+  var el = document.querySelectorAll(searchForm);
+  [].forEach.call(el, function (e) {
+    e.addEventListener("input", function (e) {
+      // fire on search input
+    });
+  });
+}
+
+onSearchInput();
 
 jQuery(window).ready(function ($) {
   'use strict';
@@ -10,19 +102,10 @@ jQuery(window).ready(function ($) {
   var searchForm = $(searchParams.searchForm);
   var urlParams = new URLSearchParams(window.location.search);
 
-  searchForm.each(function () {
-    $(this).submit(false);
-    $(this).submit(launchSearch);
-  });
-
   // Launch modal based on URL search query
   if (urlParams.get('s') != null) {
-    launchSearch();
+    launchSearchModal();
     $('.wp-sls-search-field').val(urlParams.get('s'));
-  }
-
-  function launchSearch() {
-    MicroModal.show('wp-sls-search-modal');
   }
 
   $(searchParams.searchFormInput).keyup(function () {
@@ -54,8 +137,6 @@ jQuery(window).ready(function ($) {
         if (!el.find("title").text()) {
           return;
         }
-        
-        console.log(el);
 
         // console.log(el);
 
