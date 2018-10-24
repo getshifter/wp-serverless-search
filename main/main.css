@@ -44,6 +44,10 @@
   padding: 30px 0;
 }
 
+.wp-sls-search-modal__results > article {
+  padding-bottom: 2em;
+}
+
 .wp-sls-search-modal__header a:before {
   content: "\2715";
 }

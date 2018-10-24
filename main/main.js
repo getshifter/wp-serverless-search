@@ -1,16 +1,27 @@
+const searchFeed = location.origin + '/wp-content/uploads/wp-sls/search-feed.xml';
 const urlParams = window.location.search;
 const searchModalSelector = 'wp-sls-search-modal';
+const searchModalInput = '.wp-sls-search-field';
 const searchForm = searchParams.searchForm;
-const searchModalInput = 'input.wp-sls-search-field';
+const searchFormInput = searchParams.searchFormInput;
+
+
+/**
+ * 
+ * Sync search input with search modal
+ */
+function syncSearchFields() {
+  jQuery(searchFormInput).keyup(function() {
+    jQuery(searchModalInput).val(jQuery(this).val());
+  });
+}
 
 /**
  * 
  * Launch Search Modal
  */
 function launchSearchModal() {
-  document.addEventListener("DOMContentLoaded", function (event) {
-    MicroModal.show('wp-sls-search-modal');
-  });
+  MicroModal.show('wp-sls-search-modal');
 }
 
 /**
@@ -30,25 +41,25 @@ function postUrl(url) {
 function urlQuery() {
   if (!searchQueryParams()) {
     return;
-  } else {
-    launchSearchModal();
   }
-}
 
-urlQuery();
+  launchSearchModal();
+}
 
 /**
  * 
  * @param {string} query - Add query to search modal
  */
 function addQueryToSearchModal() {
+  if (!searchQueryParams()) {
+    return;
+  }
+
   var el = document.querySelectorAll(searchModalInput);
   [].forEach.call(el, function (el) {
     el.value = searchQueryParams();
   });
 }
-
-addQueryToSearchModal();
 
 /**
  * 
@@ -78,12 +89,10 @@ function onSearchSubmit() {
   [].forEach.call(el, function (e) {
     e.addEventListener("submit", function (e) {
       e.preventDefault();
-      MicroModal.show('wp-sls-search-modal');
+      launchSearchModal();
     });
   });
 }
-
-onSearchSubmit();
 
 function onSearchInput() {
   var el = document.querySelectorAll(searchForm);
@@ -94,30 +103,9 @@ function onSearchInput() {
   });
 }
 
-onSearchInput();
-
-jQuery(window).ready(function ($) {
-  'use strict';
-
-  var searchForm = $(searchParams.searchForm);
-  var urlParams = new URLSearchParams(window.location.search);
-
-  // Launch modal based on URL search query
-  if (urlParams.get('s') != null) {
-    launchSearchModal();
-    $('.wp-sls-search-field').val(urlParams.get('s'));
-  }
-
-  $(searchParams.searchFormInput).keyup(function () {
-    $('.wp-sls-search-field').val($(this).val());
-  });
-
-});
-
-jQuery(window).ready(function ($) {
-  var feed = location.origin + '/wp-content/uploads/wp-sls/search-feed.xml';
+function searchPosts() {
   var search = null;
-  $.ajax(feed, {
+  jQuery.ajax(searchFeed, {
     accepts: {
       xml: "application/rss+xml"
     },
@@ -128,27 +116,23 @@ jQuery(window).ready(function ($) {
 
       var data = data.getElementsByTagName("channel")[0];
 
-      $('.wp-sls-search-modal [role=document]').append('<div id="wp-sls-search-results" class="wp-sls-search-modal__results"></div>');
+      jQuery('.wp-sls-search-modal [role=document]').append('<div id="wp-sls-search-results" class="wp-sls-search-modal__results"></div>');
 
-      $(data).find("item").each(function () {
-        var el = $(this);
+      jQuery(data).find("item").each(function () {
+        var el = jQuery(this);
 
         // Check for Title
         if (!el.find("title").text()) {
           return;
         }
 
-        // console.log(el);
-
         searchArray.push({
           "title": el.find('title').text(),
-          "description": el.find('description').text(),
+          "description": el.find('excerpt\\:encoded').text(),
           "link": postUrl(el.find('link').text())
         });
 
       });
-
-      // console.log(searchArray);
 
       var options = {
         shouldSort: true,
@@ -168,17 +152,17 @@ jQuery(window).ready(function ($) {
 
       var fuse = new Fuse(searchArray, options);
 
-      var $searchInput = $(searchParams.searchFormInput);
+      var $searchInput = jQuery(searchParams.searchFormInput);
 
       $searchInput.each(function () {
 
-        $(this).on('input', function () {
+        jQuery(this).on('input', function () {
 
-          var search = fuse.search($(this).val());
-          var $res = $('#wp-sls-search-results');
+          var search = fuse.search(jQuery(this).val());
+          var $res = jQuery('#wp-sls-search-results');
           $res.empty();
 
-          if ($(this).val().length < 1) return;
+          if (jQuery(this).val().length < 1) return;
           if (search[0] === undefined) {
             $res.append('<h5>No results</h5>');
           } else {
@@ -187,23 +171,22 @@ jQuery(window).ready(function ($) {
 
           search.forEach(function (data) {
 
-            var articleData = {
+            var postContentData = {
               title: data.title,
               excerpt: data.description,
               link: data.link
             };
 
-            $res.append(article(articleData));
+            $res.append(postContent(postContentData));
           });
         });
       });
     }
   });
+}
 
-});
-
-function article(
-  articleData = {
+function postContent(
+  postContentData = {
     title: '',
     excerpt: '',
     link: ''
@@ -211,10 +194,17 @@ function article(
 ) {
   return `<article>
       <header class='entry-header'>
-        <h2 class='entry-title'><a href='` + articleData.link + `' rel='bookmark'>` + articleData.title + `</a></h2>
+        <h2 class='entry-title'><a href='` + postContentData.link + `' rel='bookmark'>` + postContentData.title + `</a></h2>
       </header>
       <div class='entry-summary'>
-        ` + articleData.excerpt + `
+        ` + postContentData.excerpt + `
       </div>
     </article>`;
 }
+
+searchPosts();
+// onSearchInput();
+onSearchSubmit();
+addQueryToSearchModal();
+urlQuery();
+syncSearchFields();
