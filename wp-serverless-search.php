@@ -3,7 +3,7 @@
 Plugin Name: WP Serverless Search
 Author: Daniel Olson
 Author URI: https://github.com/emaildano/wp-serverless-search
-Description: Serverless WordPress Search
+Description: A static search plugin for WordPress.
 */
 
 /**
