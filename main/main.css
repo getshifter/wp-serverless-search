@@ -48,6 +48,14 @@
   padding-bottom: 2em;
 }
 
+.wp-sls-search-modal__results .entry-summary {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
 .wp-sls-search-modal__header a:before {
   content: "\2715";
 }

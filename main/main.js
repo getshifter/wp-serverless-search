@@ -135,6 +135,7 @@ var wpServerlessSearch = (function () {
           searchArray.push({
             "title": el.find('title').text(),
             "description": el.find('excerpt\\:encoded').text(),
+            "content": el.find('content\\:encoded').text(),
             "link": postUrl(el.find('link').text())
           });
 
@@ -152,6 +153,9 @@ var wpServerlessSearch = (function () {
             weight: 0.75
           }, {
             name: 'description',
+            weight: 0.5
+          }, {
+            name: 'content',
             weight: 0.5
           }]
         };
@@ -179,7 +183,7 @@ var wpServerlessSearch = (function () {
 
               var postContentData = {
                 title: data.title,
-                excerpt: data.description,
+                excerpt: data.description ? data.description : data.content,
                 link: data.link
               };
 
