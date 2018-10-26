@@ -41,3 +41,31 @@ Those values may change depending on your theme.
   </button>
 </form>
 ```
+
+## FAQs
+
+- Q: Is WP Serverless Search a WordPress site search plugin?
+- A: Yes!
+
+- Q: Why did you build this?
+- A: Few reasons:
+- 1. native WordPress Search is slow and inaccurate.
+- 2. We needed a site search solution for static WordPres sites using Shifter, so we built one.
+
+- Q: Is it free to use?
+- A: Yah, go have fun.
+
+- Q: Is it fast?
+- Yes, very fast.
+
+- Q: Why so fast?
+- A: It uses simple JavaScript to search a static XML. No database queries or server resources are necessary while searching.
+
+- Q: My site is huge, is that an issue?
+- A: Should be okay. We've tested WP Serverless Search up to ~1K posts and was able to return search results within milliseconds.
+
+- Q: Does it support Fuzzy search? e.g. Hallo, Halo, Hello, Helloooo
+- A: Yes! It uses Fusejs to provide fuzzy search results for typos.
+
+- Q: Does it support Auto Complete?
+- A: Yes, it will search and sort as you type.
