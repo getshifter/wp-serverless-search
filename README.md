@@ -50,7 +50,7 @@ Those values may change depending on your theme.
 > Q: Why did you build this?
 > A: Few reasons:
 > 1. native WordPress Search is slow and inaccurate.
-> 2. We needed a site search solution for static WordPres sites using Shifter, so we built one.
+> 2. We needed a site search solution for static WordPress sites using [Shifter](https://www.getshifter.io), so we built one.
 
 > Q: Is it free to use?
 > A: Yah, go have fun.
