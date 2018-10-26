@@ -52,6 +52,9 @@ Those values may change depending on your theme.
 > 1. native WordPress Search is slow and inaccurate.
 > 2. We needed a site search solution for static WordPress sites using [Shifter](https://www.getshifter.io), so we built one.
 
+> Q: Do I need to add a custom template, custom HTML, etc. to make it work?
+> A: Nope.
+
 > Q: Is it free to use?
 > A: Yah, go have fun.
 
