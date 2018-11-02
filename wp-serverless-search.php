@@ -37,13 +37,14 @@ function create_wp_sls_dir() {
 /**
  * Create Search Feed
  */
-
+// add_action( 'edit_post', 'create_search_feed' );
+add_action( 'save_post', 'create_search_feed' );
 function create_search_feed() {
+  remove_action( 'save_post', 'create_search_feed' );
 
   require_once( ABSPATH . 'wp-admin/includes/export.php' );
-
+  
   ob_start();
-  header('Content-Type: application/xml');
   export_wp();
   $xml = ob_get_clean();
 
@@ -52,8 +53,6 @@ function create_search_feed() {
   
   file_put_contents($save_path, $xml);
 }
-
-add_action( 'edit_post', 'create_search_feed' );
 
 /**
  * Set Plugin Defaults

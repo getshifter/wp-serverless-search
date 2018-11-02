@@ -19,7 +19,7 @@ function wp_sls_search_options() { ?>
     <h1><?php echo esc_html( get_admin_page_title() ); ?></h1>
     <h2>Created by <a style="color:#bc4e9c;" href="https://getshifter.io" target="_blank">Shifter</a></h2>
     <div class="card">
-      <h2 class="title">Search Trigger</h2>
+      <h2 class="title">Search Settings</h2>
       <p>Target class to activate the WP Serverless Search modal.</p>
       <form method="post" action="options.php">
           <?php settings_fields( 'wp-sls-search-settings-group' ); ?>
