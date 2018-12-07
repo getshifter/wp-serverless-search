@@ -6,8 +6,8 @@
 
 add_action( 'admin_init', 'register_sls_search_ext_settings' );
 function register_sls_search_ext_settings() {
-    register_setting( 'wp-sls-search-settings-group', 'wp_sls_search_form' );
-    register_setting( 'wp-sls-search-settings-group', 'wp_sls_search_form_input' );
+  register_setting( 'wp-sls-search-settings-group', 'wp_sls_search_form' );
+  register_setting( 'wp-sls-search-settings-group', 'wp_sls_search_form_input' );
 }
 
 /**
