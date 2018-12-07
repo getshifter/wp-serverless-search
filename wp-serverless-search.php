@@ -3,7 +3,7 @@
 * Plugin Name: WP Serverless Search
 * Plugin URI: https://github.com/emaildano/wp-serverless-search
 * Description: A static search plugin for WordPress.
-* Version: 1.0.0
+* Version: v1.0.0
 * Author: DigitalCube, Daniel Olson
 * Author URI: https://digitalcube.jp
 * License: GPL2
