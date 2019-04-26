@@ -11,7 +11,7 @@ A static search plugin for WordPress. Search through thousands of posts in milli
 
 ## Customizing to your Theme
 
-The default settings for this WordPress Plugin are designed to work with the official Twenty Seventeen WordPress Theme. However, you can customize these optiosn for custom Themes for site search forms.
+The default settings for this WordPress Plugin are designed to work with the official Twenty Seventeen WordPress Theme. However, you can customize these options for custom Themes for site search forms.
 
 1. Navigate to the WP Serverless Search WordPress Plugin Settings
 2. Update Form Class to best match your theme search form.
@@ -49,7 +49,7 @@ Those values may change depending on your theme.
 
 > Q: Why did you build this?
 > A: Few reasons:
-> 1. native WordPress Search is slow and inaccurate.
+> 1. Native WordPress Search is slow and inaccurate.
 > 2. We needed a site search solution for static WordPress sites using [Shifter](https://www.getshifter.io), so we built one.
 
 > Q: Do I need to add a custom template, custom HTML, etc. to make it work?
