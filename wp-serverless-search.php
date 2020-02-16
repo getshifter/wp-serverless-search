@@ -31,7 +31,7 @@ register_activation_hook( __FILE__, 'wp_sls_search_install' );
 function create_wp_sls_dir() {
   
   $upload_dir = wp_get_upload_dir();
-  $save_path = $upload_dir['basedir'] . '/wp-sls/.';
+  $save_path = $upload_dir['basedir'] . '/wp-sls/search/.';
   $dirname = dirname($save_path);
 
   if (!is_dir($dirname)) {
@@ -42,20 +42,42 @@ function create_wp_sls_dir() {
 /**
  * Create Search Feed
  */
-add_action( 'publish_post', 'create_search_feed' );
+
 function create_search_feed() {
 
-  require_once( ABSPATH . 'wp-admin/includes/export.php' );
-  
-  ob_start();
-  export_wp();
-  $xml = ob_get_clean();
+  $args = [
+    'post_type' => 'any',
+    'post_status' => 'publish',
+    'posts_per_page' => 10
+  ];
 
+  $query = new WP_Query( $args );
+  $posts = [];
   $upload_dir = wp_get_upload_dir();
-  $save_path = $upload_dir['basedir'] . '/wp-sls/search-feed.xml';
-  
-  file_put_contents($save_path, $xml);
+  $file_name = 'data.json';
+  $save_path = $upload_dir['basedir'] . '/wp-sls/search/' . $file_name;
+  $f = fopen( $save_path , "w" );
+
+  while( $query->have_posts() ) : $query->the_post();
+
+    $data = [
+      'id' => get_the_id(),
+      'title' => get_the_title()
+    ];
+
+    $content = json_encode($data) . PHP_EOL;
+
+    fwrite($f, $content);
+
+  endwhile;
+
+  wp_reset_query();
+
+  fclose($f);
+
 }
+
+add_action( 'save_post', 'create_search_feed' ); 
 
 /**
  * Set Plugin Defaults
@@ -101,20 +123,26 @@ add_action('wp_enqueue_scripts', 'wp_sls_search_assets' );
 add_action('admin_enqueue_scripts', 'wp_sls_search_assets' );
 
 function wp_sls_search_assets() {
-  
-  $shifter_js = plugins_url( 'main/main.js', __FILE__ );
+
+  $upload_dir = wp_get_upload_dir();
+  $wp_sls_search_data = $upload_dir['baseurl'] . '/wp-sls/search/data.json';
+
+  $wp_sls_search_js = plugins_url( 'main/main.js', __FILE__ );
 
   $search_params = array(
     'searchForm' => get_option('wp_sls_search_form'),
     'searchFormInput' => get_option('wp_sls_search_form_input')
   );
   
-  wp_register_script('wp-sls-search-js', $shifter_js, array( 'jquery', 'micromodal', 'fusejs' ), null, true);
+  wp_register_script('wp-sls-search-js', $wp_sls_search_js, array( 'jquery', 'micromodal', 'fusejs', 'flexsearch' ), null, true);
   wp_localize_script( 'wp-sls-search-js', 'searchParams', $search_params );
   wp_enqueue_script('wp-sls-search-js');
 
-  wp_register_script('fusejs', 'https://cdnjs.cloudflare.com/ajax/libs/fuse.js/3.2.1/fuse.min.js', null, null, true);
-  wp_enqueue_script('fusejs');
+  wp_register_script('flexsearch', 'https://rawcdn.githack.com/nextapps-de/flexsearch/master/dist/flexsearch.min.js', null, null, true);
+  wp_enqueue_script('flexsearch');
+
+  wp_register_script('wp-sls-search-data', $wp_sls_search_data, array( 'jquery', 'micromodal', 'flexsearch' ), null, true);
+  wp_enqueue_script('wp-sls-search-data');
 
   wp_register_script('micromodal', 'https://cdn.jsdelivr.net/npm/micromodal/dist/micromodal.min.js', null, null, true);
   wp_enqueue_script('micromodal');
