@@ -48,7 +48,7 @@ function create_search_feed() {
   $args = [
     'post_type' => 'any',
     'post_status' => 'publish',
-    'posts_per_page' => 10
+    'posts_per_page' => -1
   ];
 
   $query = new WP_Query( $args );
