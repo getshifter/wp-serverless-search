@@ -10,54 +10,103 @@
 * Text Domain: wp-serverless-search
 */
 
-
 /**
  * On Plugin Activation
  */
 
 function wp_sls_search_install() {
-  // trigger our function that registers the custom post type
-  create_wp_sls_dir();
-  create_search_feed();
+  create_dir();
 }
 
-add_action( 'init', 'create_wp_sls_dir' );
 register_activation_hook( __FILE__, 'wp_sls_search_install' );
 
 /**
- * Create WP SLS Dir
+ * On Plugin Deactivation
  */
 
-function create_wp_sls_dir() {
+function wp_sls_search_deactivate() {
+  remove_dir();
+}
+
+register_deactivation_hook( __FILE__, 'wp_sls_search_deactivate' );
+
+/**
+ * On Plugin Uninstall
+ */
+
+function wp_sls_search_uninstall() {
+  remove_dir();
+}
+
+register_uninstall_hook( __FILE__, 'wp_sls_search_uninstall' );
+
+
+/**
+ * Retreives file and folder information
+ */
+
+function wp_get_search_index() {
   
   $upload_dir = wp_get_upload_dir();
-  $save_path = $upload_dir['basedir'] . '/wp-sls/search/.';
-  $dirname = dirname($save_path);
+  $file_name = 'index.json';
+  $folder_name = '/wp-sls-search/';
+  $tmpfile_name = 'index.tmp';
+  $basedir = $upload_dir['basedir'] . $folder_name;
+  $baseurl = $upload_dir['baseurl'] . $folder_name;
+  $file = $basedir . $file_name; // e.g.: /var/www/vhosts/example.com/wp-content/uploads/wp-sls-search/index.json
+  $url = $baseurl . $file_name; // e.g.: https://example.com/wp-content/uploads/wp-sls-search/index.json
+  $tmpfile = $basedir . $tmpfile_name; //e.g.: https://example.com/wp-content/uploads/wp-sls-search/index.tmp
+  
+  return [
+    'file'    => $file,
+    'basedir' => $basedir,
+    'tmpfile' => $tmpfile,
+    'url'     => $url,
+  ];
+}
+
+/**
+ * Create directory
+ */
+
+function create_dir() {
+  
+  $wp_sls_search = wp_get_search_index();
+  $dirname = dirname($wp_sls_search['basedir'] . '.');
 
   if (!is_dir($dirname)) {
-      mkdir($dirname, 0755, true);
+    mkdir($dirname, 0755, true);
   }
 }
 
 /**
- * Create Search Feed
+ * Remove directory
  */
 
-add_action( 'save_post', 'create_search_feed' ); 
-function create_search_feed() {
+function remove_dir() {
+  $wp_sls_search = wp_get_search_index();
+  $dirname = dirname($wp_sls_search['basedir'] . '.');
+  rmdir($dirname);
+}
+
+/**
+ * Create index
+ */
+
+add_action( 'admin_post_create_index', 'create_dir' );
+add_action( 'admin_post_create_index', 'create_index' );
+function create_index() {
 
   $args = [
     'post_type' => 'any',
     'post_status' => 'publish',
-    'posts_per_page' => -1
+    'posts_per_page' => 10
   ];
 
   $query = new WP_Query( $args );
   $posts = [];
-  $upload_dir = wp_get_upload_dir();
-  $file_name = 'data.json';
-  $save_path = $upload_dir['basedir'] . '/wp-sls/search/' . $file_name;
-  $f = fopen( $save_path , "w" );
+  $wp_sls_search = wp_get_search_index();
+  $f = fopen( $wp_sls_search['file'] , "w" );
 
   while( $query->have_posts() ) : $query->the_post();
 
@@ -78,38 +127,27 @@ function create_search_feed() {
 
 }
 
-add_action('save_post', 'update_search_feed');
-function update_search_feed($post_id) {
+/**
+ * Update index
+ */
 
-    //Check it's not an auto save routine
-     if ( defined('DOING_AUTOSAVE') && DOING_AUTOSAVE ) 
-          return;
+add_action('save_post', 'update_index');
+function update_index($id) {
 
-    // Perform permission checks
+    // Check autosave
+     if ( defined('DOING_AUTOSAVE') && DOING_AUTOSAVE ) return;
+
+    // Check permissions & remove action
     if ( !current_user_can('edit_post', $id) ) return;
-    remove_action('save_post', 'update_search_feed');
+    remove_action('save_post', 'update_index');
 
-    $upload_dir = wp_get_upload_dir();
-    $file_name = 'data.json';
-    $save_path = $upload_dir['basedir'] . '/wp-sls/search/' . $file_name;
-
-    // $json_object = file_get_contents($save_path);
-    // $data = json_decode($json_object, true);
-
-    // $data['title'] = get_the_title($id);
-
-    // $new_json_object = json_encode($data);
-    // file_put_contents($save_path, $new_json_object, FILE_APPEND);
-
-    // Re-hook this function
-    add_action('save_post', 'update_search_feed');
-
-
-
-    $reading = fopen($save_path, 'r');
-    $writing = fopen($upload_dir['basedir'] . '/wp-sls/search/temp.tmp', 'w');
+    // Restore action
+    add_action('save_post', 'update_index');
 
     $replaced = false;
+    $wp_sls_search = wp_get_search_index();
+    $reading = fopen($wp_sls_search['file'], 'r');
+    $writing = fopen($wp_sls_search['tmpfile'], 'w');
 
     while (!feof($reading)) {
       $line = fgets($reading);
@@ -120,34 +158,15 @@ function update_search_feed($post_id) {
       fputs($writing, $line);
     }
 
-    fclose($reading); fclose($writing);
+    fclose($reading);
+    fclose($writing);
     
-    // might as well not overwrite the file if we didn't replace anything
+    // Check or skip for changes.
     if ($replaced) {
-      rename($upload_dir['basedir'] . '/wp-sls/search/temp.tmp', $save_path);
+      rename($wp_sls_search['tmpfile'], $wp_sls_search['file']);
     } else {
-      unlink($upload_dir['basedir'] . '/wp-sls/search/temp.tmp');
+      unlink($wp_sls_search['tmpfile']);
     }
-
-}
-
-/**
- * Set Plugin Defaults
- */
-
-function wp_sls_search_default_options() {
-    $options = array(
-        'wp_sls_search_form' => '[role=search]',
-        'wp_sls_search_form_input' => 'input[type=search]',
-    );
-
-    foreach ( $options as $key => $value ) {
-        update_option($key, $value);
-    }
-}
-
-if (!get_option('wp_sls_search_form')) {
-  register_activation_hook(__FILE__, 'wp_sls_search_default_options');
 }
 
 /**
@@ -166,61 +185,3 @@ function wp_sls_search() {
 }
 
 require_once('lib/includes.php');
-
-/*
-* Scripts
-*/
-
-add_action('wp_enqueue_scripts', 'wp_sls_search_assets' );
-add_action('admin_enqueue_scripts', 'wp_sls_search_assets' );
-
-function wp_sls_search_assets() {
-
-  $upload_dir = wp_get_upload_dir();
-  $wp_sls_search_data = $upload_dir['baseurl'] . '/wp-sls/search/data.json';
-
-  $wp_sls_search_js = plugins_url( 'main/main.js', __FILE__ );
-
-  $search_params = array(
-    'searchForm' => get_option('wp_sls_search_form'),
-    'searchFormInput' => get_option('wp_sls_search_form_input')
-  );
-  
-  wp_register_script('wp-sls-search-js', $wp_sls_search_js, array( 'jquery', 'micromodal', 'fusejs', 'flexsearch' ), null, true);
-  wp_localize_script( 'wp-sls-search-js', 'searchParams', $search_params );
-  wp_enqueue_script('wp-sls-search-js');
-
-  wp_register_script('flexsearch', 'https://rawcdn.githack.com/nextapps-de/flexsearch/master/dist/flexsearch.min.js', null, null, true);
-  wp_enqueue_script('flexsearch');
-
-  wp_register_script('wp-sls-search-data', $wp_sls_search_data, array( 'jquery', 'micromodal', 'flexsearch' ), null, true);
-  wp_enqueue_script('wp-sls-search-data');
-
-  wp_register_script('micromodal', 'https://cdn.jsdelivr.net/npm/micromodal/dist/micromodal.min.js', null, null, true);
-  wp_enqueue_script('micromodal');
-
-  wp_register_style("wp-sls-search-css", plugins_url( '/main/main.css', __FILE__ ));
-  wp_enqueue_style("wp-sls-search-css");
-
-}
-
-function wp_sls_search_modal() { ?>
-  <div class="wp-sls-search-modal" id="wp-sls-search-modal" aria-hidden="true">
-    <div class="wp-sls-search-modal__overlay" tabindex="-1" data-micromodal-overlay>
-      <div class="wp-sls-search-modal__container" role="dialog" aria-labelledby="modal__title" aria-describedby="modal__content">
-        <header class="wp-sls-search-modal__header">
-          <a href="#" aria-label="Close modal" data-micromodal-close></a>
-        </header>
-        <form role="search" method="get" class="search-form">
-          <label for="wp-sls-earch-field">
-            <span class="screen-reader-text">Search for:</span>
-          </label>
-          <input id="wp-sls-earch-field" class="wp-sls-search-field" type="search" autocomplete="off" class="search-field" placeholder="Search …" value="" name="s">
-        </form>
-        <div role="document"></div>
-      </div>
-    </div>
-  </div>
-<?php }
-
-add_action('wp_footer', 'wp_sls_search_modal');

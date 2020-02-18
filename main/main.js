@@ -4,216 +4,86 @@
  */
 
 
-var wpServerlessSearch = (function () {
-  const searchFeed = location.origin + '/wp-content/uploads/wp-sls/search-feed.xml';
-  const urlParams = window.location.search;
-  const searchModalSelector = 'wp-sls-search-modal';
-  const searchModalInput = '.wp-sls-search-field';
-  const searchForm = searchParams.searchForm;
-  const searchFormInput = searchParams.searchFormInput;
+(function(){
 
-  /**
-   * 
-   * Sync search input with search modal
-   */
-  function syncSearchFields() {
-    jQuery(searchFormInput).keyup(function () {
-      jQuery(searchModalInput).val(jQuery(this).val());
-    });
+  var index = new FlexSearch({
+      encode: "advanced",
+      tokenize: "reverse",
+      suggest: true,
+      cache: true
+  });
+
+  for(var i = 0; i < data.length; i++){
+    index.add(i, data[i]);
   }
 
-  /**
-   * 
-   * Launch Search Modal
-   */
-  function launchSearchModal() {
-    MicroModal.show('wp-sls-search-modal');
-  }
+  var suggestions = document.getElementById("suggestions");
+  var autocomplete = document.getElementById("autocomplete");
+  var userinput = document.getElementById("userinput");
 
-  /**
-   * 
-   * @param {string} url - WordPress Post URL Pathname
-   */
-  function postUrl(url) {
-    var parser = document.createElement('a');
-    parser.href = url;
-    return parser.pathname;
-  }
+  userinput.addEventListener("input", show_results, true);
+  userinput.addEventListener("keyup", accept_autocomplete, true);
+  suggestions.addEventListener("click", accept_suggestion, true);
 
-  /**
-   * 
-   * Test for search query based on URL
-   */
-  function urlQuery() {
-    if (!searchQueryParams()) {
-      return;
-    }
+  function show_results(){
 
-    launchSearchModal();
-  }
+      var value = this.value;
+      var results = index.search(value, 25);
+      var entry, childs = suggestions.childNodes;
+      var i = 0, len = results.length;
 
-  /**
-   * 
-   * @param {string} query - Add query to search modal
-   */
-  function addQueryToSearchModal() {
-    if (!searchQueryParams()) {
-      return;
-    }
+      for(; i < len; i++){
 
-    var el = document.querySelectorAll(searchModalInput);
-    [].forEach.call(el, function (el) {
-      el.value = searchQueryParams();
-    });
-  }
+          entry = childs[i];
 
-  /**
-   * 
-   * @param {string} url - Parse search query paramaters from URL
-   */
-  function searchQueryParams(url = urlParams) {
-    url = url.split('+').join(' ');
+          console.log(entry)
 
-    var params = {},
-      tokens,
-      re = /[?&]?([^=]+)=([^&]*)/g;
+          if(!entry){
 
-    while (tokens = re.exec(url)) {
-      params[decodeURIComponent(tokens[1])] = decodeURIComponent(tokens[2]);
-    }
-
-    return params.s;
-  }
-
-  /**
-   * 
-   * Search submit
-   */
-
-  function onSearchSubmit() {
-    var el = document.querySelectorAll(searchForm);
-    [].forEach.call(el, function (e) {
-      e.addEventListener("submit", function (e) {
-        e.preventDefault();
-        launchSearchModal();
-      });
-    });
-  }
-
-  function onSearchInput() {
-    var el = document.querySelectorAll(searchForm);
-    [].forEach.call(el, function (e) {
-      e.addEventListener("input", function (e) {
-        // fire on search input
-      });
-    });
-  }
-
-  function searchPosts() {
-    var search = null;
-    jQuery.ajax(searchFeed, {
-      accepts: {
-        xml: "application/rss+xml"
-      },
-      dataType: "xml",
-      success: function (data) {
-
-        var searchArray = [];
-
-        var data = data.getElementsByTagName("channel")[0];
-
-        jQuery('.wp-sls-search-modal [role=document]').append('<div id="wp-sls-search-results" class="wp-sls-search-modal__results"></div>');
-
-        jQuery(data).find("item").each(function () {
-          var el = jQuery(this);
-
-          // Check for Title
-          if (!el.find("title").text()) {
-            return;
+              entry = document.createElement("div");
+              suggestions.appendChild(entry);
           }
 
-          searchArray.push({
-            "title": el.find('title').text(),
-            "description": el.find('excerpt\\:encoded').text(),
-            "content": el.find('content\\:encoded').text(),
-            "link": postUrl(el.find('link').text())
-          });
-
-        });
-
-        var options = {
-          shouldSort: true,
-          threshold: 0.6,
-          location: 0,
-          distance: 100,
-          maxPatternLength: 32,
-          minMatchCharLength: 1,
-          keys: [{
-            name: 'title',
-            weight: 0.75
-          }, {
-            name: 'description',
-            weight: 0.5
-          }, {
-            name: 'content',
-            weight: 0.5
-          }]
-        };
-
-        var fuse = new Fuse(searchArray, options);
-
-        var $searchInput = jQuery(searchParams.searchFormInput);
-
-        $searchInput.each(function () {
-
-          jQuery(this).on('input', function () {
-
-            var search = fuse.search(jQuery(this).val());
-            var $res = jQuery('#wp-sls-search-results');
-            $res.empty();
-
-            if (jQuery(this).val().length < 1) return;
-            if (search[0] === undefined) {
-              $res.append('<h5>No results</h5>');
-            } else {
-              $res.append('<h5>' + search.length + ' results:</h5>');
-            }
-
-            search.forEach(function (data) {
-
-              var postContentData = {
-                title: data.title,
-                excerpt: data.description ? data.description : data.content,
-                link: data.link
-              };
-
-              $res.append(postContent(postContentData));
-            });
-          });
-        });
+          entry.textContent = data[results[i]];
       }
-    });
+
+      while(childs.length > len){
+        suggestions.removeChild(childs[i])
+      }
+
+      var first_result = data[results[0]];
+      var match = first_result && first_result.toLowerCase().indexOf(value.toLowerCase());
+
+      if(first_result && (match !== -1)){
+
+          autocomplete.value = value + first_result.substring(match + value.length);
+          autocomplete.current = first_result;
+      }
+      else{
+
+          autocomplete.value = autocomplete.current = value;
+      }
   }
 
-  function postContent(
-    postContentData = {
-      title: '',
-      excerpt: '',
-      link: ''
-    }
-  ) {
-    return `<article>
-      <header class='entry-header'>
-        <h2 class='entry-title'><a href='` + postContentData.link + `' rel='bookmark'>` + postContentData.title + `</a></h2>
-      </header>
-    </article>`;
+  function accept_autocomplete(event){
+
+      if((event || window.event).keyCode === 13) {
+
+          this.value = autocomplete.value = autocomplete.current;
+      }
   }
 
-  // onSearchInput();
-  searchPosts();
-  onSearchSubmit();
-  addQueryToSearchModal();
-  urlQuery();
-  syncSearchFields();
+  function accept_suggestion(event){
 
-})();
+      var target = (event || window.event).target;
+
+      userinput.value = autocomplete.value = target.textContent;
+
+      while(suggestions.lastChild){
+
+          suggestions.removeChild(suggestions.lastChild);
+      }
+
+      return false;
+  }
+}());
