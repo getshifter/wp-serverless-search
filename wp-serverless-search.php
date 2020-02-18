@@ -43,6 +43,7 @@ function create_wp_sls_dir() {
  * Create Search Feed
  */
 
+add_action( 'save_post', 'create_search_feed' ); 
 function create_search_feed() {
 
   $args = [
@@ -77,7 +78,58 @@ function create_search_feed() {
 
 }
 
-add_action( 'save_post', 'create_search_feed' ); 
+add_action('save_post', 'update_search_feed');
+function update_search_feed($post_id) {
+
+    //Check it's not an auto save routine
+     if ( defined('DOING_AUTOSAVE') && DOING_AUTOSAVE ) 
+          return;
+
+    // Perform permission checks
+    if ( !current_user_can('edit_post', $id) ) return;
+    remove_action('save_post', 'update_search_feed');
+
+    $upload_dir = wp_get_upload_dir();
+    $file_name = 'data.json';
+    $save_path = $upload_dir['basedir'] . '/wp-sls/search/' . $file_name;
+
+    // $json_object = file_get_contents($save_path);
+    // $data = json_decode($json_object, true);
+
+    // $data['title'] = get_the_title($id);
+
+    // $new_json_object = json_encode($data);
+    // file_put_contents($save_path, $new_json_object, FILE_APPEND);
+
+    // Re-hook this function
+    add_action('save_post', 'update_search_feed');
+
+
+
+    $reading = fopen($save_path, 'r');
+    $writing = fopen($upload_dir['basedir'] . '/wp-sls/search/temp.tmp', 'w');
+
+    $replaced = false;
+
+    while (!feof($reading)) {
+      $line = fgets($reading);
+      if (stristr( $line, '{"id":'.get_the_id($id) )) {
+        $line = '{"id":'.get_the_id($id).',"title":"'.get_the_title($id).'"}' . PHP_EOL;
+        $replaced = true;
+      }
+      fputs($writing, $line);
+    }
+
+    fclose($reading); fclose($writing);
+    
+    // might as well not overwrite the file if we didn't replace anything
+    if ($replaced) {
+      rename($upload_dir['basedir'] . '/wp-sls/search/temp.tmp', $save_path);
+    } else {
+      unlink($upload_dir['basedir'] . '/wp-sls/search/temp.tmp');
+    }
+
+}
 
 /**
  * Set Plugin Defaults
