@@ -48,13 +48,13 @@ register_uninstall_hook( __FILE__, 'wp_sls_search_uninstall' );
 function wp_get_search_index() {
   
   $upload_dir = wp_get_upload_dir();
-  $file_name = 'index.json';
+  $file_name = 'index.js';
   $folder_name = '/wp-sls-search/';
   $tmpfile_name = 'index.tmp';
   $basedir = $upload_dir['basedir'] . $folder_name;
   $baseurl = $upload_dir['baseurl'] . $folder_name;
-  $file = $basedir . $file_name; // e.g.: /var/www/vhosts/example.com/wp-content/uploads/wp-sls-search/index.json
-  $url = $baseurl . $file_name; // e.g.: https://example.com/wp-content/uploads/wp-sls-search/index.json
+  $file = $basedir . $file_name; // e.g.: /var/www/vhosts/example.com/wp-content/uploads/wp-sls-search/index.js
+  $url = $baseurl . $file_name; // e.g.: https://example.com/wp-content/uploads/wp-sls-search/index.js
   $tmpfile = $basedir . $tmpfile_name; //e.g.: https://example.com/wp-content/uploads/wp-sls-search/index.tmp
   
   return [
@@ -71,8 +71,7 @@ function wp_get_search_index() {
 
 function create_dir() {
   
-  $wp_sls_search = wp_get_search_index();
-  $dirname = dirname($wp_sls_search['basedir'] . '.');
+  $dirname = dirname(wp_get_search_index()['basedir'] . '.');
 
   if (!is_dir($dirname)) {
     mkdir($dirname, 0755, true);
@@ -84,8 +83,7 @@ function create_dir() {
  */
 
 function remove_dir() {
-  $wp_sls_search = wp_get_search_index();
-  $dirname = dirname($wp_sls_search['basedir'] . '.');
+  $dirname = dirname(wp_get_search_index()['basedir'] . '.');
   rmdir($dirname);
 }
 
@@ -100,26 +98,25 @@ function create_index() {
   $args = [
     'post_type' => 'any',
     'post_status' => 'publish',
-    'posts_per_page' => 10
+    'posts_per_page' => -1
   ];
 
   $query = new WP_Query( $args );
-  $posts = [];
-  $wp_sls_search = wp_get_search_index();
-  $f = fopen( $wp_sls_search['file'] , "w" );
+  $f = fopen( wp_get_search_index()['file'] , "w" );
+  $content = "";
 
   while( $query->have_posts() ) : $query->the_post();
 
     $data = [
-      'id' => get_the_id(),
       'title' => get_the_title()
     ];
 
-    $content = json_encode($data) . PHP_EOL;
-
-    fwrite($f, $content);
+    $content .= '"' . $data['title'] . '",';
 
   endwhile;
+  
+  $content = "var data = [" . $content . "]";
+  fwrite($f, $content);
 
   wp_reset_query();
 
@@ -185,3 +182,31 @@ function wp_sls_search() {
 }
 
 require_once('lib/includes.php');
+
+/*
+* Scripts
+*/
+
+add_action('wp_enqueue_scripts', 'wp_sls_search_assets' );
+add_action('admin_enqueue_scripts', 'wp_sls_search_assets' );
+
+function wp_sls_search_assets() {
+  
+  $shifter_js = plugins_url( 'main/main.js', __FILE__ );
+  $shifter_css = plugins_url( '/main/main.css', __FILE__ );
+  $flexsearch_js = plugins_url( '/main/flexsearch.compact.js', __FILE__ );
+  $data = wp_get_search_index()['url'];
+  
+  wp_register_script('wp-sls-search-js', $shifter_js, array( 'flexsearch-js', 'wp-sls-search-data' ), null, true);
+  wp_enqueue_script('wp-sls-search-js');
+
+  wp_register_script('flexsearch-js', $flexsearch_js, null, null, true);
+  wp_enqueue_script('flexsearch-js');
+
+  wp_register_script('wp-sls-search-data', $data, null, null, true);
+  wp_enqueue_script('wp-sls-search-data');
+
+  wp_register_style("wp-sls-search-css", $shifter_css);
+  wp_enqueue_style("wp-sls-search-css");
+
+}

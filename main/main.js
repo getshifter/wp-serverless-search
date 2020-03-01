@@ -3,17 +3,15 @@
  * A static search plugin for WordPress.
  */
 
-
-(function(){
-
+(function() {
   var index = new FlexSearch({
-      encode: "advanced",
-      tokenize: "reverse",
-      suggest: true,
-      cache: true
+    encode: "advanced",
+    tokenize: "reverse",
+    suggest: true,
+    cache: true
   });
 
-  for(var i = 0; i < data.length; i++){
+  for (var i = 0; i < data.length; i++) {
     index.add(i, data[i]);
   }
 
@@ -25,65 +23,56 @@
   userinput.addEventListener("keyup", accept_autocomplete, true);
   suggestions.addEventListener("click", accept_suggestion, true);
 
-  function show_results(){
+  function show_results() {
+    var value = this.value;
+    var results = index.search(value, 25);
+    var entry,
+      childs = suggestions.childNodes;
+    var i = 0,
+      len = results.length;
 
-      var value = this.value;
-      var results = index.search(value, 25);
-      var entry, childs = suggestions.childNodes;
-      var i = 0, len = results.length;
+    for (; i < len; i++) {
+      entry = childs[i];
 
-      for(; i < len; i++){
-
-          entry = childs[i];
-
-          console.log(entry)
-
-          if(!entry){
-
-              entry = document.createElement("div");
-              suggestions.appendChild(entry);
-          }
-
-          entry.textContent = data[results[i]];
+      if (!entry) {
+        entry = document.createElement("div");
+        suggestions.appendChild(entry);
       }
 
-      while(childs.length > len){
-        suggestions.removeChild(childs[i])
-      }
+      entry.textContent = data[results[i]];
+    }
 
-      var first_result = data[results[0]];
-      var match = first_result && first_result.toLowerCase().indexOf(value.toLowerCase());
+    while (childs.length > len) {
+      suggestions.removeChild(childs[i]);
+    }
 
-      if(first_result && (match !== -1)){
+    var first_result = data[results[0]];
+    var match =
+      first_result && first_result.toLowerCase().indexOf(value.toLowerCase());
 
-          autocomplete.value = value + first_result.substring(match + value.length);
-          autocomplete.current = first_result;
-      }
-      else{
-
-          autocomplete.value = autocomplete.current = value;
-      }
+    if (first_result && match !== -1) {
+      autocomplete.value = value + first_result.substring(match + value.length);
+      autocomplete.current = first_result;
+    } else {
+      autocomplete.value = autocomplete.current = value;
+    }
   }
 
-  function accept_autocomplete(event){
-
-      if((event || window.event).keyCode === 13) {
-
-          this.value = autocomplete.value = autocomplete.current;
-      }
+  function accept_autocomplete(event) {
+    if ((event || window.event).keyCode === 13) {
+      this.value = autocomplete.value = autocomplete.current;
+    }
   }
 
-  function accept_suggestion(event){
+  function accept_suggestion(event) {
+    var target = (event || window.event).target;
 
-      var target = (event || window.event).target;
+    userinput.value = autocomplete.value = target.textContent;
 
-      userinput.value = autocomplete.value = target.textContent;
+    while (suggestions.lastChild) {
+      suggestions.removeChild(suggestions.lastChild);
+    }
 
-      while(suggestions.lastChild){
-
-          suggestions.removeChild(suggestions.lastChild);
-      }
-
-      return false;
+    return false;
   }
-}());
+})();
