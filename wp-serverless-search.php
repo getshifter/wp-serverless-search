@@ -42,12 +42,12 @@ register_uninstall_hook( __FILE__, 'wp_sls_search_uninstall' );
 
 
 /**
- * Retreives file and folder information
+ * Retrieve file and folder information
  */
 
 function wp_get_search_index() {
   
-  $upload_dir = wp_get_upload_dir();
+  $upload_dir = wp_get_upload_dir(); // e.g.: /wp-content/uploads/
   $file_name = 'index.js';
   $folder_name = '/wp-sls-search/';
   $tmpfile_name = 'index.tmp';
@@ -91,8 +91,6 @@ function remove_dir() {
  * Create index
  */
 
-add_action( 'admin_post_create_index', 'create_dir' );
-add_action( 'admin_post_create_index', 'create_index' );
 function create_index() {
 
   $args = [
@@ -124,11 +122,13 @@ function create_index() {
 
 }
 
+add_action( 'admin_post_create_index', 'create_dir' );
+add_action( 'admin_post_create_index', 'create_index' );
+
 /**
  * Update index
  */
 
-add_action('save_post', 'update_index');
 function update_index($id) {
 
     // Check autosave
@@ -166,11 +166,12 @@ function update_index($id) {
     }
 }
 
+add_action('save_post', 'update_index');
+
 /**
  * Admin Settings Menu
  */
 
-add_action( 'admin_menu', 'wp_sls_search' );
 function wp_sls_search() {
   add_options_page(
     'WP Serverless Search',
@@ -181,6 +182,7 @@ function wp_sls_search() {
   );
 }
 
+add_action( 'admin_menu', 'wp_sls_search' );
 require_once('lib/includes.php');
 
 /*
