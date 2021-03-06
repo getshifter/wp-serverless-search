@@ -6,10 +6,13 @@
   display: none;
 }
 
-
 /**************************\
   Basic Modal Styles
 \**************************/
+
+.wp-sls-search-modal {
+  z-index: 9999;
+}
 
 .wp-sls-search-modal__overlay {
   position: fixed;
