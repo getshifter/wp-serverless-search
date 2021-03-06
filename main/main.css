@@ -2,7 +2,7 @@
   Required Styles
 \**************************/
 
-[aria-hidden="true"] {
+.wp-sls-search-modal[aria-hidden="true"] {
   display: none;
 }
 
@@ -61,8 +61,4 @@
 
 .wp-sls-search-modal__header a:before {
   content: "\2715";
-}
-
-input.wp-sls-search-field {
-  width: 100%;
 }
