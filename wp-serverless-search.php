@@ -49,15 +49,17 @@ add_action('publish_post', 'create_search_feed');
 function create_search_feed()
 {
 
-  $args = array(
-    'content'    => ['post', 'page'],
-    'status'     => 'publish',
-  );
-
   require_once(ABSPATH . 'wp-admin/includes/export.php');
 
   ob_start();
-  export_wp($args);
+
+  $wpExportOptions = array(
+    'content'    => 'post',
+    'status'     => 'publish',
+  );
+
+  export_wp($wpExportOptions);
+
   $xml = ob_get_clean();
 
   $upload_dir = wp_get_upload_dir();
