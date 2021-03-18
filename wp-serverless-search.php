@@ -118,7 +118,11 @@ function wp_sls_search_assets()
 
   $shifter_js = plugins_url('main/main.js', __FILE__);
 
+  $upload_dir = wp_get_upload_dir();
+  $feed_url = $upload_dir['baseurl'] . '/wp-sls/search-feed.xml';
+
   $search_params = array(
+    'searchFeed' => $feed_url,
     'searchForm' => get_option('wp_sls_search_form'),
     'searchFormInput' => get_option('wp_sls_search_form_input')
   );
